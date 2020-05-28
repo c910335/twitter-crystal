@@ -34,7 +34,7 @@ module Twitter
       end
 
       def post(path : String, form = {} of String => String, &block)
-        http_client.post_form(path, form) do |response|
+        http_client.post(path, form: form) do |response|
           yield handle_response(response)
         end
       end
@@ -44,8 +44,7 @@ module Twitter
         when 200..299
           response.body_io
         when 400..499
-          message = Twitter::Errors.from_json(response.body).errors.first.message
-          raise Twitter::Errors::ClientError.new(message)
+          raise Twitter::Errors::ClientError.new(response.body_io.gets_to_end)
         when 502
           raise Twitter::Errors::ServerError.new("Bad Gateway")
         when 503
